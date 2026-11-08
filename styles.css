@@ -67,7 +67,15 @@ h1, h2, p, ol, dl, dd { margin: 0; }
 .home-head { padding: calc(env(safe-area-inset-top) + 14px) 22px 6px 24px; }
 .home-top { display: flex; align-items: center; gap: 8px; min-height: 44px; margin-right: -10px; }
 .today { flex: 1; font-size: 15px; font-weight: 500; color: var(--ink-2); }
-.update-chip { height: 30px; padding: 0 13px; border-radius: 999px; background: var(--get); color: #fff; font-size: 13px; font-weight: 700; }
+/* 새 버전 알림: 어느 화면에서나 위쪽 가운데에 뜬다 */
+.update-chip {
+  position: fixed; top: calc(env(safe-area-inset-top) + 10px); left: 50%; z-index: 30;
+  height: 38px; padding: 0 18px; border-radius: 999px; background: #2463c9; color: #fff;
+  font-size: 14.5px; font-weight: 700; transform: translateX(-50%);
+  box-shadow: 0 10px 24px -10px rgba(20, 50, 120, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  animation: toast 520ms var(--spring) both;
+}
+.update-chip:disabled { opacity: 0.8; }
 .wordmark { margin-top: 2px; font-size: 46px; font-weight: 820; line-height: 1.05; letter-spacing: -0.05em; }
 .home-sum { margin-top: 10px; min-height: 22px; font-size: 15px; color: var(--ink-2); }
 .home-sum .num { color: var(--ink); font-size: 16px; }
@@ -216,7 +224,9 @@ h1, h2, p, ol, dl, dd { margin: 0; }
 @keyframes lift { to { opacity: 0; transform: translateY(-18px) scale(0.98); } }
 @keyframes fade { from { opacity: 0; } }
 .sheet-body { padding: 14px 20px 20px; }
-.sheet-head { display: flex; align-items: center; justify-content: space-between; margin: 0 -10px 4px 0; }
+.sheet-head { display: flex; align-items: center; gap: 4px; margin: 0 -10px 4px 0; }
+.sheet-title { flex: 1; }
+.head-delete { padding: 0 10px; }
 .sheet-title { font-size: 17px; font-weight: 720; letter-spacing: -0.02em; }
 
 .people-chips { display: flex; gap: 8px; margin: 6px -20px 16px; padding: 2px 20px; overflow-x: auto; scrollbar-width: none; }
@@ -231,20 +241,9 @@ h1, h2, p, ol, dl, dd { margin: 0; }
 .chip[aria-checked="true"]::before { background: rgba(255, 255, 255, 0.75); }
 .chip:active { transform: scale(0.95); }
 
-.kind { position: relative; display: grid; grid-template-columns: 1fr 1fr; height: 54px; padding: 4px; border-radius: 17px; background: var(--paper); }
-.kind-btn { position: relative; z-index: 1; border-radius: 13px; font-size: 16px; font-weight: 650; color: var(--ink-3); transition: color 260ms; }
-.kind-btn[data-kind="give"][aria-checked="true"] { color: var(--give); }
-.kind-btn[data-kind="get"][aria-checked="true"] { color: var(--get); }
-.kind-thumb {
-  position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 13px;
-  background: var(--surface); box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.16), 0 0 0 0.5px var(--rule);
-  transition: transform 480ms var(--spring);
-}
-.kind[data-kind="get"] .kind-thumb { transform: translateX(100%); }
-
-.amount-field { display: flex; align-items: baseline; justify-content: center; margin: 24px 0 18px; color: var(--give); cursor: text; transition: color 260ms; }
+.amount-field { display: flex; align-items: baseline; justify-content: center; margin: 22px 0 18px; color: var(--ink); cursor: text; transition: color 260ms; }
+.amount-field.give { color: var(--give); }
 .amount-field.get { color: var(--get); }
-.sign { font-family: var(--figure); font-size: 40px; margin-right: 4px; }
 .amount-input {
   width: 1.2ch; min-width: 1.2ch; max-width: 78vw; padding: 0; border: 0; outline: none; background: none;
   color: inherit; font-size: 58px; font-weight: 400; line-height: 1.1; text-align: center; caret-color: currentColor;
@@ -276,6 +275,18 @@ h1, h2, p, ol, dl, dd { margin: 0; }
 }
 .primary-btn:active { transform: scale(0.96); }
 .text-btn { height: 44px; padding: 0 6px; font-size: 15px; font-weight: 650; }
+/* 줬어요 / 받았어요 = 기록 버튼 */
+.kind-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+.kind-save {
+  height: 60px; border-radius: 18px; color: #fff; font-size: 17.5px; font-weight: 740; letter-spacing: -0.02em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 -4px 0 rgba(0, 0, 0, 0.16);
+  transition: transform 260ms var(--spring), filter 200ms;
+}
+.kind-save.give { background: linear-gradient(180deg, #d4544b, #b9372f); }
+.kind-save.get { background: linear-gradient(180deg, #3a78dc, #1f56b4); }
+.kind-save:active { transform: scale(0.95); filter: brightness(0.96); }
+.kind-save.give.current { box-shadow: inset 0 1px 0 rgba(255,255,255,.22), inset 0 -4px 0 rgba(0,0,0,.16), 0 0 0 3px var(--surface), 0 0 0 5px #c8413a; }
+.kind-save.get.current { box-shadow: inset 0 1px 0 rgba(255,255,255,.22), inset 0 -4px 0 rgba(0,0,0,.16), 0 0 0 3px var(--surface), 0 0 0 5px #2463c9; }
 .text-btn.danger { color: var(--give); }
 
 .person-preview { display: flex; align-items: flex-start; height: 112px; margin: 6px 0 14px; padding: 20px 22px; border-radius: 22px; font-size: 19px; font-weight: 680; transition: background 300ms; }

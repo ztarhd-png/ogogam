@@ -24,7 +24,6 @@
     <header class="home-head">
       <div class="home-top">
         <p id="today" class="today"></p>
-        <button id="update-ready" class="update-chip" type="button" hidden>업데이트</button>
         <button id="add-person" class="head-add" type="button"><svg class="i"><use href="#i-plus"/></svg>사람 추가</button>
         <button id="open-settings" class="icon-btn" type="button" aria-label="설정과 백업"><svg class="i"><use href="#i-gear"/></svg></button>
       </div>
@@ -57,6 +56,7 @@
     <p id="ledger-empty" class="ledger-empty" hidden>아직 기록이 없어요.<br>아래 <b>+</b>를 눌러 첫 기록을 남기세요.</p>
   </section>
 
+  <button id="update-ready" class="update-chip" type="button" hidden>새 버전으로 업데이트</button>
   <button id="fab" class="fab" type="button" aria-label="주고받은 기록 추가"><svg class="i"><use href="#i-plus"/></svg></button>
 </main>
 
@@ -64,16 +64,11 @@
   <form id="entry-form" method="dialog" class="sheet-body" autocomplete="off">
     <div class="sheet-head">
       <h2 id="entry-title" class="sheet-title">새 기록</h2>
+      <button id="entry-delete" class="text-btn danger head-delete" type="button" hidden>삭제</button>
       <button class="icon-btn" type="button" data-close aria-label="닫기"><svg class="i"><use href="#i-close"/></svg></button>
     </div>
     <div id="entry-people" class="people-chips" role="radiogroup" aria-label="누구와"></div>
-    <div class="kind" role="radiogroup" aria-label="준 돈인지 받은 돈인지">
-      <button type="button" class="kind-btn" data-kind="give" role="radio">줬어요</button>
-      <button type="button" class="kind-btn" data-kind="get" role="radio">받았어요</button>
-      <span class="kind-thumb" aria-hidden="true"></span>
-    </div>
     <label class="amount-field">
-      <span class="sign" id="entry-sign" aria-hidden="true">−</span>
       <input id="entry-amount" class="amount-input num" inputmode="numeric" enterkeyhint="done" placeholder="0" aria-label="금액">
       <span class="amount-unit">원</span>
     </label>
@@ -81,9 +76,9 @@
       <input id="entry-memo" class="memo-input" maxlength="60" enterkeyhint="done" placeholder="메모 (예: 점심값)" aria-label="메모">
       <label class="date-pill"><span id="entry-date-label">오늘</span><input id="entry-date" type="date" aria-label="날짜"></label>
     </div>
-    <div class="sheet-actions">
-      <button id="entry-delete" class="text-btn danger" type="button" hidden>삭제</button>
-      <button id="entry-save" class="primary-btn" type="submit">기록하기</button>
+    <div class="kind-actions">
+      <button class="kind-save give" type="submit" data-kind="give">줬어요</button>
+      <button class="kind-save get" type="submit" data-kind="get">받았어요</button>
     </div>
   </form>
 </dialog>
@@ -115,10 +110,10 @@
       <button id="backup" class="setting" type="button"><b>백업 파일 저장</b><span>모든 사람과 기록을 파일 하나로</span></button>
       <button id="restore" class="setting" type="button"><b>백업 파일 불러오기</b><span>지금 기록에 더해요. 같은 기록은 한 번만</span></button>
       <button id="export-csv" class="setting" type="button"><b>엑셀용 CSV 내보내기</b><span>날짜, 사람, 준 돈, 받은 돈, 메모</span></button>
+      <button id="check-update" class="setting" type="button"><b>업데이트 확인</b><span id="app-info">새 버전이 있으면 바로 바꿔요</span></button>
     </div>
     <input id="restore-file" type="file" accept="application/json,.json" hidden>
-    <p class="prose small">홈 화면에 추가한 앱을 지우면 기록도 함께 지워져요. 새 버전이 나오면 첫 화면 위쪽에 <b>업데이트</b> 버튼이 보이고, 누를 때만 바뀌어요.</p>
-    <p id="app-info" class="prose small"></p>
+    <p class="prose small">홈 화면에 추가한 앱을 지우면 기록도 함께 지워져요. 새 버전이 나오면 화면 위쪽에 <b>업데이트</b> 버튼이 보이고, 누를 때만 바뀌어요. 기록은 그대로 남아요.</p>
   </div>
 </dialog>
 

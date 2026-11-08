@@ -220,7 +220,7 @@
   }
 
   // ── 기록 입력 ───────────────────────────────────
-  let editing = null, entryPerson = null, kind = 'give';
+  let editing = null, entryPerson = null;
   const amountInput = $('entry-amount');
   function digits(v) { return v.replace(/[^\d]/g, '').replace(/^0+(?=\d)/, '').slice(0, 12); }
   function fitAmount() {
@@ -233,14 +233,14 @@
     amountInput.value = d ? fmt.format(Number(d)) : '';
     fitAmount();
   });
-  function setKind(k) {
-    kind = k;
-    $('entry-form').querySelector('.kind').dataset.kind = k;
-    for (const b of document.querySelectorAll('.kind-btn')) b.setAttribute('aria-checked', String(b.dataset.kind === k));
-    $('entry-sign').textContent = k === 'give' ? '−' : '+';
-    amountInput.closest('.amount-field').classList.toggle('get', k === 'get');
+  // 고칠 때는 원래 준 돈인지 받은 돈인지 금액 색과 버튼 테두리로 보여 준다. 새 기록은 중립색.
+  function showKind(k) {
+    const f = amountInput.closest('.amount-field');
+    f.classList.remove('shake');
+    f.classList.toggle('give', k === 'give');
+    f.classList.toggle('get', k === 'get');
+    for (const b of document.querySelectorAll('.kind-save')) b.classList.toggle('current', b.dataset.kind === k);
   }
-  for (const b of document.querySelectorAll('.kind-btn')) b.onclick = () => setKind(b.dataset.kind);
 
   function setEntryPerson(id) {
     entryPerson = id;
@@ -265,7 +265,6 @@
     if (!state.people.length) { openPerson(null); return; }
     editing = entry || null;
     $('entry-title').textContent = editing ? '기록 고치기' : '새 기록';
-    $('entry-save').textContent = editing ? '고치기' : '기록하기';
     $('entry-delete').hidden = !editing;
     const pick = editing ? editing.personId
       : view === 'book' ? currentId
@@ -275,7 +274,7 @@
       onclick: () => setEntryPerson(p.id)
     }, p.name)));
     setEntryPerson(pick);
-    setKind(editing ? (editing.amount < 0 ? 'give' : 'get') : (ui.lastKind || 'give'));
+    showKind(editing ? (editing.amount < 0 ? 'give' : 'get') : null);
     amountInput.value = editing ? won(editing.amount) : '';
     fitAmount();
     $('entry-memo').value = editing ? editing.memo || '' : '';
@@ -289,8 +288,13 @@
   }
   $('fab').onclick = () => openEntry(null);
 
+  // 줬어요 / 받았어요 버튼이 곧 기록 버튼이다(누르는 순간 그쪽으로 적힌다).
+  let pressedKind = null; // submitter를 모르는 오래된 브라우저용
+  for (const b of document.querySelectorAll('.kind-save')) b.addEventListener('click', () => { pressedKind = b.dataset.kind; });
   $('entry-form').addEventListener('submit', e => {
     e.preventDefault();
+    const kind = (e.submitter && e.submitter.dataset.kind) || pressedKind;
+    if (!kind) return;
     const n = Number(digits(amountInput.value));
     if (!n) {
       const f = amountInput.closest('.amount-field');
@@ -309,7 +313,7 @@
       id = uid();
       state.entries.push({ id, personId: entryPerson, amount, memo, date, createdAt: new Date().toISOString() });
     }
-    ui.lastKind = kind; ui.lastPerson = entryPerson;
+    ui.lastPerson = entryPerson;
     save();
     amountInput.blur(); $('entry-memo').blur();
     closeSheet('entry-sheet');
@@ -322,8 +326,8 @@
       toast(`${p.name} 통장에 적었어요`);
     }
   });
-  // 메모에서 키보드의 완료를 누르면 바로 기록
-  $('entry-memo').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); $('entry-form').requestSubmit(); } });
+  // 키보드의 완료/엔터는 키보드만 내린다(준 돈인지 받은 돈인지는 버튼으로 고른다).
+  for (const input of [amountInput, $('entry-memo')]) input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); input.blur(); } });
 
   $('entry-delete').onclick = () => {
     if (!editing) return;
@@ -472,8 +476,22 @@
   navigator.storage?.persist?.().catch(() => {});
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && view === 'home') renderHome(false); });
 
-  let appVersion = '';
-  const showAppInfo = () => { $('app-info').textContent = appVersion ? `버전 ${appVersion}` : ''; };
+  let appVersion = '', swReg = null, applyUpdate = null;
+  const showAppInfo = () => { $('app-info').textContent = appVersion ? `지금 버전 ${appVersion}` : '새 버전이 있으면 바로 바꿔요'; };
+  // 설정의 '업데이트 확인': 새 버전을 찾아 있으면 바로 바꾸고, 없으면 최신이라고 알린다.
+  $('check-update').onclick = async () => {
+    if (!swReg) { toast('홈 화면 앱이나 인터넷 주소로 열었을 때 확인할 수 있어요'); return; }
+    $('app-info').textContent = '확인하는 중…';
+    try { await swReg.update(); } catch (_) { showAppInfo(); toast('인터넷 연결을 확인하세요'); return; }
+    const waitInstall = () => new Promise(resolve => {
+      const next = swReg.installing;
+      if (!next) return resolve();
+      next.addEventListener('statechange', () => { if (next.state !== 'installing') resolve(); });
+    });
+    await waitInstall();
+    if (swReg.waiting && applyUpdate) applyUpdate();
+    else { showAppInfo(); toast('지금이 최신 버전이에요'); }
+  };
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     const sw = navigator.serviceWorker;
     let updating = false;
@@ -486,17 +504,20 @@
     sw.addEventListener('controllerchange', () => { if (updating) location.reload(); else askVersion(); });
     window.addEventListener('load', () => {
       sw.register('./sw.js', { updateViaCache: 'none' }).then(reg => {
+        swReg = reg;
         const offer = () => { if (reg.waiting && sw.controller) $('update-ready').hidden = false; };
         offer();
         reg.addEventListener('updatefound', () => {
           const next = reg.installing;
           if (next) next.addEventListener('statechange', () => { if (next.state === 'installed') offer(); });
         });
-        $('update-ready').onclick = () => {
+        applyUpdate = () => {
           if (!reg.waiting) return;
           updating = true; $('update-ready').disabled = true; $('update-ready').textContent = '바꾸는 중…';
+          $('app-info').textContent = '새 버전으로 바꾸는 중…';
           reg.waiting.postMessage('skipWaiting');
         };
+        $('update-ready').onclick = applyUpdate;
         const check = () => reg.update().catch(() => {});
         check();
         document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
