@@ -147,7 +147,7 @@
         onclick: () => openEntry(e)
       },
         h('span', { class: 'r-date' }, h('b', {}, d.getDate()), h('small', {}, (d.getMonth() + 1) + '월')),
-        h('span', { class: 'r-memo' + (e.memo ? '' : ' quiet') }, e.memo || (give ? '줬어요' : '받았어요')),
+        h('span', { class: 'r-memo' + (e.memo ? '' : ' quiet') }, e.memo || (give ? '줄 것' : '받을 것')),
         h('span', { class: 'r-amt num ' + (give ? 'give' : 'get') }, (give ? '−' : '+') + won(e.amount)),
         h('span', { class: 'r-run num' }, '잔액 ' + (run < 0 ? '−' : '') + won(run))
       )));
@@ -502,12 +502,12 @@
         const items = dutch.extras[id] || (dutch.extras[id] = []);
         const extraRows = items.map((x, k) => h('div', { class: 'extra' },
           h('input', {
-            class: 'extra-memo', maxlength: 20, enterkeyhint: 'done', placeholder: '메뉴 (예: 맥주)', 'aria-label': `${dutchName(id)} 따로 먹은 메뉴`, value: x.memo,
+            class: 'extra-memo', maxlength: 20, autocomplete: 'off', enterkeyhint: 'done', placeholder: '메뉴 (예: 맥주)', 'aria-label': `${dutchName(id)} 따로 먹은 메뉴`, value: x.memo,
             oninput: e => { x.memo = e.target.value; }
           }),
           h('label', { class: 'extra-amt' },
             h('input', {
-              class: 'num', inputmode: 'numeric', enterkeyhint: 'done', placeholder: '0', 'aria-label': `${dutchName(id)} 따로 먹은 금액`, value: x.amount ? fmt.format(x.amount) : '',
+              class: 'num', inputmode: 'numeric', pattern: '[0-9]*', autocomplete: 'off', enterkeyhint: 'done', placeholder: '0', 'aria-label': `${dutchName(id)} 따로 먹은 금액`, value: x.amount ? fmt.format(x.amount) : '',
               oninput: e => { formatMoneyInput(e.target); x.amount = numOf(e.target.value); renderDutchSplit(false); }
             }), h('span', {}, '원')),
           h('button', {
@@ -523,7 +523,7 @@
               onclick: () => {
                 items.push({ memo: '', amount: 0 });
                 renderDutchSplit(true);
-                const rows = list.querySelector(`[data-id="${CSS.escape(id)}"]`).querySelectorAll('.extra-memo');
+                const rows = list.querySelector(`[data-id="${CSS.escape(id)}"]`).querySelectorAll('.extra-amt input');
                 rows[rows.length - 1].focus();
               }
             }, '+ 따로 먹은 것'),
@@ -606,8 +606,8 @@
     closeSheet('dutch-sheet');
     renderHome(false);
     const msg = dutch.payer === ME
-      ? `${made.length}명에게 ${won(made.reduce((s, x) => s + x.amount, 0))}원 받았다고 적었어요`
-      : `${dutchName(dutch.payer)}에게 내 몫 ${won(-made[0].amount)}원 줬다고 적었어요`;
+      ? `${made.length}명에게 ${won(made.reduce((s, x) => s + x.amount, 0))}원 받을 것으로 적었어요`
+      : `${dutchName(dutch.payer)}에게 내 몫 ${won(-made[0].amount)}원 줄 것으로 적었어요`;
     toast(msg, '되돌리기', () => {
       state.entries = state.entries.filter(x => x.dutch !== group); save(); refresh();
     });

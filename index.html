@@ -61,7 +61,7 @@
 </main>
 
 <dialog id="entry-sheet" class="sheet" aria-labelledby="entry-title">
-  <form id="entry-form" method="dialog" class="sheet-body" autocomplete="off">
+  <form id="entry-form" method="dialog" novalidate class="sheet-body" autocomplete="off">
     <div class="sheet-head">
       <h2 id="entry-title" class="sheet-title">새 기록</h2>
       <button id="entry-delete" class="text-btn danger head-delete" type="button" hidden>삭제</button>
@@ -69,7 +69,7 @@
     </div>
     <div id="entry-people" class="people-chips" role="radiogroup" aria-label="누구와"></div>
     <label class="amount-field">
-      <input id="entry-amount" class="amount-input num" inputmode="numeric" enterkeyhint="done" placeholder="0" aria-label="금액">
+      <input id="entry-amount" class="amount-input num" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" placeholder="0" aria-label="금액">
       <span class="amount-unit">원</span>
     </label>
     <div class="entry-row">
@@ -77,8 +77,8 @@
       <label class="date-pill"><span id="entry-date-label">오늘</span><input id="entry-date" type="date" aria-label="날짜"></label>
     </div>
     <div class="kind-actions">
-      <button class="kind-save give" type="submit" data-kind="give">줬어요</button>
-      <button class="kind-save get" type="submit" data-kind="get">받았어요</button>
+      <button class="kind-save give" type="submit" data-kind="give">줄 것</button>
+      <button class="kind-save get" type="submit" data-kind="get">받을 것</button>
     </div>
   </form>
 </dialog>
@@ -118,7 +118,7 @@
 </dialog>
 
 <dialog id="dutch-sheet" class="sheet" aria-labelledby="dutch-title">
-  <form id="dutch-form" method="dialog" class="sheet-body" autocomplete="off">
+  <form id="dutch-form" method="dialog" novalidate class="sheet-body" autocomplete="off">
     <div class="sheet-head">
       <h2 id="dutch-title" class="sheet-title">더치페이</h2>
       <button class="icon-btn" type="button" data-close aria-label="닫기"><svg class="i"><use href="#i-close"/></svg></button>
@@ -131,7 +131,7 @@
     </div>
     <p class="field-label">총액</p>
     <label class="amount-field dutch-amount">
-      <input id="dutch-total" class="amount-input num" inputmode="numeric" enterkeyhint="done" placeholder="0" aria-label="총액">
+      <input id="dutch-total" class="amount-input num" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" placeholder="0" aria-label="총액">
       <span class="amount-unit">원</span>
     </label>
     <ol id="dutch-split" class="split" aria-label="사람별 낼 돈"></ol>
