@@ -108,16 +108,16 @@
     <p class="prose">기록은 <b>이 아이폰의 이 앱 안에만</b> 저장돼요. 다른 기기와 동기화되지 않으니, 가끔 백업 파일을 ‘파일’ 앱에 보관하세요.</p>
     <div class="setting-list">
       <button id="backup" class="setting" type="button"><b>백업 파일 저장</b><span>모든 사람과 기록을 파일 하나로</span></button>
-      <button id="restore" class="setting" type="button"><b>백업 파일 불러오기</b><span>지금 기록에 더해요. 같은 기록은 한 번만</span></button>
+      <button id="restore" class="setting" type="button"><b>불러오기</b><span>오고감 백업 파일이나 태그가계부 CSV를 지금 기록에 더해요. 같은 기록은 한 번만</span></button>
       <button id="export-csv" class="setting" type="button"><b>엑셀용 CSV 내보내기</b><span>날짜, 사람, 준 돈, 받은 돈, 메모</span></button>
       <button id="check-update" class="setting" type="button"><b>업데이트 확인</b><span id="app-info">새 버전이 있으면 바로 바꿔요</span></button>
     </div>
-    <input id="restore-file" type="file" accept="application/json,.json" hidden>
+    <input id="restore-file" type="file" accept=".json,.csv,application/json,text/csv,text/comma-separated-values,text/plain" hidden>
     <p class="prose small">홈 화면에 추가한 앱을 지우면 기록도 함께 지워져요. 새 버전이 나오면 화면 위쪽에 <b>업데이트</b> 버튼이 보이고, 누를 때만 바뀌어요. 기록은 그대로 남아요.</p>
   </div>
 </dialog>
 
 <div id="toast" class="toast" role="status" hidden><span id="toast-text"></span><button id="toast-action" type="button" hidden></button></div>
-<script src="app.js"></script>
+<script src="import.js"></script><script src="app.js"></script>
 </body>
 </html>

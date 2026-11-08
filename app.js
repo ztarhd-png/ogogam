@@ -434,26 +434,70 @@
     download('﻿' + rows.map(r => r.map(q).join(',')).join('\r\n'), `오고감-${today()}.csv`, 'text/csv;charset=utf-8');
   };
   $('restore').onclick = () => $('restore-file').click();
+  // 불러오기: 오고감 백업(JSON)과 태그가계부 'CSV 내보내기' 파일을 모두 받는다. 지금 기록에 더하고, 같은 기록은 한 번만.
+  function mergeBackup(data) {
+    if (!Array.isArray(data.people) || !Array.isArray(data.entries)) throw Error('not backup');
+    const pIds = new Set(state.people.map(p => p.id)), eIds = new Set(state.entries.map(e => e.id));
+    let np = 0, ne = 0;
+    for (const p of data.people) if (p && p.id && p.name && !pIds.has(p.id)) { state.people.push({ id: p.id, name: String(p.name), color: p.color || COLORS[0][1], createdAt: p.createdAt || new Date().toISOString() }); np++; }
+    const known = new Set(state.people.map(p => p.id));
+    for (const e of data.entries) if (e && e.id && known.has(e.personId) && Number.isFinite(e.amount) && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && !eIds.has(e.id)) { state.entries.push({ id: e.id, personId: e.personId, amount: e.amount, memo: String(e.memo || ''), date: e.date, createdAt: e.createdAt || '' }); ne++; }
+    return { np, ne, note: '' };
+  }
+  function mergeMoneyBook(text) {
+    const { books, problems } = MoneyBookCsv.parse(text);
+    if (!books.length) throw Error('not csv');
+    const eIds = new Set(state.entries.map(e => e.id));
+    let np = 0, ne = 0;
+    for (const b of books) {
+      if (!b.entries.length) continue; // 기록 없는 빈 가계부는 건너뛴다
+      const name = b.name.trim();
+      // 같은 이름의 통장이 이미 있으면 거기에 더한다
+      let p = person('mb:' + name) || state.people.find(x => x.name.trim() === name);
+      if (!p) {
+        const used = new Set(state.people.map(x => x.color));
+        const color = (COLORS.find(([, c]) => !used.has(c)) || COLORS[state.people.length % COLORS.length])[1];
+        p = { id: 'mb:' + name, name, color, createdAt: new Date().toISOString() };
+        state.people.push(p); np++;
+      }
+      // 기록 id는 내용으로 만든다(날짜·금액·태그·같은 날 같은 기록의 순번) → 같은 파일을 두 번 불러와도 겹치지 않는다
+      const seen = new Map();
+      b.entries.forEach((e, i) => {
+        const key = `${e.date}|${e.amount}|${e.tag}`, k = seen.get(key) || 0;
+        seen.set(key, k + 1);
+        const id = `mb:${name}:${key}:${k}`;
+        if (eIds.has(id)) return;
+        state.entries.push({ id, personId: p.id, amount: e.amount, memo: e.tag, date: e.date, createdAt: `${e.date}T00:00:${String(i).padStart(4, '0')}` });
+        eIds.add(id); ne++;
+      });
+    }
+    return { np, ne, note: problems.length ? ` (읽지 못한 줄 ${problems.length}개)` : '' };
+  }
   $('restore-file').onchange = async () => {
     const file = $('restore-file').files[0];
     $('restore-file').value = '';
     if (!file) return;
+    const before = JSON.stringify({ people: state.people, entries: state.entries });
+    let result, fromCsv = false;
     try {
-      const data = JSON.parse(await file.text());
-      if (!Array.isArray(data.people) || !Array.isArray(data.entries)) throw Error();
-      const pIds = new Set(state.people.map(p => p.id)), eIds = new Set(state.entries.map(e => e.id));
-      let np = 0, ne = 0;
-      for (const p of data.people) if (p && p.id && p.name && !pIds.has(p.id)) { state.people.push({ id: p.id, name: String(p.name), color: p.color || COLORS[0][1], createdAt: p.createdAt || new Date().toISOString() }); np++; }
-      const known = new Set(state.people.map(p => p.id));
-      for (const e of data.entries) if (e && e.id && known.has(e.personId) && Number.isFinite(e.amount) && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && !eIds.has(e.id)) { state.entries.push({ id: e.id, personId: e.personId, amount: e.amount, memo: String(e.memo || ''), date: e.date, createdAt: e.createdAt || '' }); ne++; }
-      if (storageBroken && (np || ne)) storageBroken = false;
-      save();
-      closeSheet('settings-sheet');
-      refresh();
-      toast(np || ne ? `사람 ${np}명, 기록 ${ne}건을 더했어요` : '새로 더할 기록이 없어요');
+      const text = await file.text();
+      if (/^\s*\{/.test(text.replace(/^﻿/, ''))) result = mergeBackup(JSON.parse(text));
+      else { result = mergeMoneyBook(text); fromCsv = true; }
     } catch (_) {
-      toast('이 파일은 오고감 백업 파일이 아니에요');
+      toast('오고감 백업 파일이나 태그가계부 CSV 파일이 아니에요');
+      return;
     }
+    const { np, ne, note } = result;
+    if (storageBroken && (np || ne)) storageBroken = false;
+    save();
+    closeSheet('settings-sheet');
+    refresh();
+    if (!np && !ne) { toast('새로 더할 기록이 없어요' + note); return; }
+    toast(`${fromCsv ? '태그가계부에서 ' : ''}사람 ${np}명, 기록 ${ne}건을 가져왔어요${note}`, '되돌리기', () => {
+      const b = JSON.parse(before);
+      state.people = b.people; state.entries = b.entries;
+      save(); refresh();
+    });
   };
 
   // ── 알림 ───────────────────────────────────────
