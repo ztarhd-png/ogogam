@@ -435,9 +435,10 @@
   // ── 더치페이 ─────────────────────────────────────
   // 같이 먹은 사람들이 총액을 나눈다. 몫 = (총액 − 모두의 '따로 먹은 것') ÷ 인원 + 그 사람의 '따로 먹은 것'.
   // 1원 단위로 나누어떨어지지 않는 나머지는 계산한 사람이 진다.
-  // 장부에는 실제로 오간 돈을 적는다.
-  // 내가 계산했으면: 친구들이 각자 몫을 나에게 보내 주니 친구마다 그 통장에 '받았어요'로. 내 몫은 적지 않는다.
-  // 친구가 계산했으면: 내 몫을 그 친구에게 보내니 그 친구 통장에 '줬어요'로. 친구끼리 오간 돈은 내 장부 밖이라 적지 않는다.
+  // 정산은 늘 내가 모아서 한다.
+  // 내가 계산했으면: 친구마다 그 몫을 그 친구 통장에 '받을 것'으로. 내 몫은 적지 않는다.
+  // 친구 A가 계산했으면: A 몫을 뺀 나머지 모두의 몫(나 포함)을 내가 A에게 '줄 것'으로,
+  //   그리고 A가 아닌 다른 친구들의 몫은 각자 통장에 '받을 것'으로(그 돈을 나에게 주고, 내가 A에게 한꺼번에 준다).
   const ME = '@me';
   let dutch = null; // { ids: [ME, personId...], payer, extras: { id: [{ memo, amount }] } }
   const dutchTotal = $('dutch-total');
@@ -548,18 +549,23 @@
     else if (r.common < 0) note.textContent = `따로 먹은 것(${won(r.extras)}원)이 총액보다 많아요.`;
     else if (!r.total) note.textContent = `${dutch.ids.length}명이 나눠요. 총액을 넣으세요.`;
     else if (dutch.payer === ME) note.textContent = how + (plan.length ? ` · 받을 돈 ${won(plan.reduce((s, x) => s + x.amount, 0))}원` : '');
-    else note.textContent = how + ` · ${dutchName(dutch.payer)}에게 보낼 돈 ${won(r.shares.get(ME) || 0)}원`;
+    else {
+      const give = plan.find(x => x.personId === dutch.payer);
+      const get = plan.filter(x => x.amount > 0).reduce((s, x) => s + x.amount, 0);
+      note.textContent = how + ` · ${dutchName(dutch.payer)}에게 줄 것 ${won(give ? -give.amount : 0)}원` + (get ? `, 나머지에게 받을 것 ${won(get)}원` : '');
+    }
     $('dutch-save').disabled = !(r.ok && plan.length);
-    $('dutch-save').textContent = dutch.payer === ME
-      ? (plan.length ? `${plan.length}명 통장에 나눠 적기` : '나눠서 적기')
-      : `${dutchName(dutch.payer)} 통장에 내 몫 적기`;
+    $('dutch-save').textContent = plan.length ? `${plan.length}명 통장에 나눠 적기` : '나눠서 적기';
   }
   // 실제로 적을 기록: [{ personId, amount }]
   function dutchPlan(r) {
     if (!r.ok || !dutch.ids.includes(ME)) return [];
     if (dutch.payer === ME) return dutch.ids.filter(id => id !== ME && r.shares.get(id) > 0).map(id => ({ personId: id, amount: r.shares.get(id) }));
-    const mine = r.shares.get(ME) || 0;
-    return mine > 0 ? [{ personId: dutch.payer, amount: -mine }] : [];
+    const others = dutch.ids.filter(id => id !== dutch.payer);
+    const toPayer = others.reduce((s, id) => s + (r.shares.get(id) || 0), 0);
+    const plan = toPayer > 0 ? [{ personId: dutch.payer, amount: -toPayer }] : [];
+    for (const id of others) if (id !== ME && r.shares.get(id) > 0) plan.push({ personId: id, amount: r.shares.get(id) });
+    return plan;
   }
 
   function openDutch() {
@@ -595,19 +601,17 @@
       return own.length ? ' + ' + own.map(x => x.memo.trim() || '따로').join(', ') : '';
     };
     const paidBy = dutch.payer === ME ? '' : ` · ${dutchName(dutch.payer)} 계산`;
-    const made = plan.map(({ personId, amount }) => ({
-      id: uid(), personId, amount,
-      memo: `${title} · ${dutch.ids.length}명 나눔${paidBy}${extraNote(dutch.payer === ME ? personId : ME)}`,
-      date, createdAt: now, dutch: group
-    }));
+    // 계산한 친구에게 줄 것은 '나·B·C 몫'처럼 누구 몫을 모았는지 남긴다
+    const memoFor = personId => personId === dutch.payer && dutch.payer !== ME
+      ? `${title} · ${dutch.ids.length}명 나눔${paidBy} · ${dutch.ids.filter(id => id !== dutch.payer).map(dutchName).join('·')} 몫`
+      : `${title} · ${dutch.ids.length}명 나눔${paidBy}${extraNote(personId)}`;
+    const made = plan.map(({ personId, amount }) => ({ id: uid(), personId, amount, memo: memoFor(personId), date, createdAt: now, dutch: group }));
     state.entries.push(...made);
     save();
     document.activeElement && document.activeElement.blur && document.activeElement.blur();
     closeSheet('dutch-sheet');
     renderHome(false);
-    const msg = dutch.payer === ME
-      ? `${made.length}명에게 ${won(made.reduce((s, x) => s + x.amount, 0))}원 받을 것으로 적었어요`
-      : `${dutchName(dutch.payer)}에게 내 몫 ${won(-made[0].amount)}원 줄 것으로 적었어요`;
+    const msg = `${made.length}명 통장에 나눠 적었어요`;
     toast(msg, '되돌리기', () => {
       state.entries = state.entries.filter(x => x.dutch !== group); save(); refresh();
     });
