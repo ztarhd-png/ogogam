@@ -78,7 +78,9 @@ h1, h2, p, ol, dl, dd { margin: 0; }
 .update-chip:disabled { opacity: 0.8; }
 .wordmark { margin-top: 2px; font-size: 46px; font-weight: 820; line-height: 1.05; letter-spacing: -0.05em; }
 .home-sum { margin-top: 10px; min-height: 22px; font-size: 15px; color: var(--ink-2); }
-.home-sum .num { color: var(--ink); font-size: 16px; }
+.home-sum .num { color: var(--ink); font-size: 16px; font-weight: 600; }
+.home-sum .num.plus { color: var(--get); }
+.home-sum .num.minus { color: var(--give); }
 
 .stack { padding: 22px 14px 0; }
 
@@ -114,10 +116,19 @@ h1, h2, p, ol, dl, dd { margin: 0; }
 .card:first-child { margin-top: 0; }
 .card:active { transform: translateY(-3px) scale(0.992); }
 .card-name { grid-column: 1; align-self: start; padding-top: 4px; font-size: 19px; font-weight: 680; letter-spacing: -0.025em; }
-.card-bal { grid-column: 2; display: grid; justify-items: end; line-height: 1.1; }
-.card-bal .num { font-size: 27px; font-weight: 500; }
-.card-bal .unit { margin-left: 3px; font-size: 14px; font-weight: 600; opacity: 0.85; }
-.card-dir { margin-top: 4px; font-size: 12.5px; font-weight: 600; opacity: 0.74; }
+.card-bal { grid-column: 2; align-self: start; }
+.card-bal .num { font-size: 23px; font-weight: 600; }
+.card-bal .unit { margin-left: 2px; font-size: 13px; font-weight: 700; }
+
+/* 잔액 캡슐: 흰 바탕에 파랑(받은 게 많음) · 빨강(준 게 많음) · 회색(딱 맞음) */
+.bal-pill {
+  display: inline-flex; align-items: baseline; padding: 6px 13px 7px; border-radius: 999px; line-height: 1;
+  background: rgba(255, 255, 255, 0.95); color: #5b5f69;
+  box-shadow: 0 6px 14px -8px rgba(0, 0, 0, 0.45), inset 0 -2px 0 rgba(0, 0, 0, 0.07);
+}
+.bal-pill.plus { color: #2463c9; }
+.bal-pill.minus { color: #c8413a; }
+.bal-pill .unit { opacity: 0.8; }
 .card-foot { grid-column: 1 / -1; grid-row: 3; display: flex; gap: 26px; }
 .card-foot span { display: grid; gap: 1px; }
 .card-foot small { font-size: 12px; font-weight: 600; opacity: 0.7; }
@@ -154,10 +165,10 @@ h1, h2, p, ol, dl, dd { margin: 0; }
 .book-cover::after { top: calc(env(safe-area-inset-top) + 18px); bottom: auto; right: -14px; font-size: 200px; color: rgba(0, 0, 0, 0.09); }
 .cover-bar { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; }
 .cover-name { text-align: center; font-size: 17px; font-weight: 680; letter-spacing: -0.02em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cover-balance { margin-top: 30px; text-align: center; line-height: 1; }
-.cover-balance .num { font-size: 62px; font-weight: 400; letter-spacing: -0.025em; }
-.cover-balance .unit { margin-left: 6px; font-size: 22px; font-weight: 560; opacity: 0.85; }
-.cover-dir { margin-top: 12px; text-align: center; font-size: 15px; font-weight: 560; opacity: 0.8; }
+.cover-balance { margin-top: 26px; text-align: center; line-height: 1; }
+.cover-balance .bal-pill { padding: 12px 26px 14px; box-shadow: 0 14px 28px -14px rgba(0, 0, 0, 0.5), inset 0 -3px 0 rgba(0, 0, 0, 0.07); transition: color 300ms; }
+.cover-balance .num { font-size: 52px; font-weight: 500; letter-spacing: -0.025em; }
+.cover-balance .unit { margin-left: 5px; font-size: 20px; font-weight: 650; }
 .cover-totals { display: grid; grid-template-columns: 1fr 1fr; margin: 28px 10px 0; }
 .cover-totals div { display: grid; justify-items: center; gap: 2px; }
 .cover-totals div + div { border-left: 1px solid rgba(255, 255, 255, 0.2); }

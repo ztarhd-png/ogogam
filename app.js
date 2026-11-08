@@ -63,6 +63,11 @@
     return { give, get, bal: get - give, last };
   }
   const direction = bal => bal > 0 ? '받은 게 더 많아요' : bal < 0 ? '준 게 더 많아요' : '딱 맞아요';
+  // 잔액은 글 대신 색으로: 받은 게 많으면 파랑(+), 준 게 많으면 빨강(−). 흰 캡슐 위에 올려 어느 표지 색에서도 또렷하게.
+  const tone = bal => bal > 0 ? 'plus' : bal < 0 ? 'minus' : 'even';
+  const sign = bal => bal > 0 ? '+' : bal < 0 ? '−' : '';
+  const balPill = bal => h('span', { class: 'bal-pill ' + tone(bal) },
+    h('span', { class: 'num' }, sign(bal) + won(bal)), h('span', { class: 'unit' }, '원'));
   // 최근에 주고받은 사람이 위로
   function peopleByRecent() {
     return state.people.map(p => ({ p, s: stats(p.id) }))
@@ -82,9 +87,7 @@
       onclick: ev => openBook(p.id, ev.currentTarget)
     },
       h('span', { class: 'card-name' }, p.name),
-      h('span', { class: 'card-bal' },
-        h('span', {}, h('span', { class: 'num' }, won(s.bal)), h('span', { class: 'unit' }, '원')),
-        h('span', { class: 'card-dir' }, direction(s.bal))),
+      h('span', { class: 'card-bal' }, balPill(s.bal)),
       h('span', { class: 'card-foot' },
         h('span', {}, h('small', {}, '준 돈'), h('span', { class: 'num' }, won(s.give))),
         h('span', {}, h('small', {}, '받은 돈'), h('span', { class: 'num' }, won(s.get))))
@@ -96,7 +99,7 @@
     const sum = $('home-sum');
     if (!counted) sum.textContent = list.length ? '아직 주고받은 기록이 없어요.' : '';
     else if (!total) sum.textContent = '모두 합치면 주고받은 돈이 딱 맞아요.';
-    else sum.replaceChildren('모두 합치면 ', total > 0 ? '받은 게 ' : '준 게 ', h('span', { class: 'num' }, won(total)), '원 더 많아요.');
+    else sum.replaceChildren('모두 합치면 ', total > 0 ? '받은 게 ' : '준 게 ', h('span', { class: 'num ' + tone(total) }, won(total) + '원'), ' 더 많아요.');
   }
 
   // ── 사람 통장 ───────────────────────────────────
@@ -126,7 +129,9 @@
     $('book-name').textContent = p.name;
     if (opts.fresh) delete $('book-balance').dataset.v;
     animateNumber($('book-balance'), Math.abs(s.bal));
-    $('book-dir').textContent = direction(s.bal);
+    $('book-pill').className = 'bal-pill ' + tone(s.bal);
+    $('book-sign').textContent = sign(s.bal);
+    $('book-pill').setAttribute('aria-label', `${won(s.bal)}원 ${direction(s.bal)}`);
     $('book-give').textContent = won(s.give);
     $('book-get').textContent = won(s.get);
 
