@@ -294,6 +294,10 @@
       onclick: () => setEntryPerson(p.id)
     }, p.name)));
     setEntryPerson(pick);
+    // 사람 통장 안에서 여는 기록은 그 사람 것이 정해져 있으니 사람 고르는 칸을 숨기고 제목에 이름을 쓴다
+    const fixed = view === 'book';
+    $('entry-people').hidden = fixed;
+    if (fixed) $('entry-title').textContent = `${person(pick).name} · ${editing ? '기록 고치기' : '새 기록'}`;
     showKind(editing ? (editing.amount < 0 ? 'give' : 'get') : null);
     amountInput.value = editing ? won(editing.amount) : '';
     fitAmount();
