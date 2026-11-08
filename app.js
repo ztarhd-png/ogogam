@@ -189,20 +189,40 @@
       window.scrollTo(0, 0);
     }, [card && (() => card), () => $('book-cover')]);
   }
-  function closeBook() {
+  function closeBook(instant) {
     if (view !== 'book') return;
     const id = currentId;
-    transition(() => {
+    const update = () => {
       view = 'home';
       document.body.dataset.view = 'home';
       document.documentElement.style.removeProperty('--c');
       renderHome(false);
       $('book').hidden = true; $('home').hidden = false;
       window.scrollTo(0, homeScroll);
-    }, [() => $('book-cover'), () => cardOf(id)]);
+    };
+    if (instant) { update(); return; }
+    transition(update, [() => $('book-cover'), () => cardOf(id)]);
   }
   $('book-back').onclick = () => { if (history.state && history.state.book) history.back(); else closeBook(); };
-  window.addEventListener('popstate', () => { closeSheets(); if (view === 'book') closeBook(); });
+
+  // 화면 가장자리에서 스와이프해 뒤로 가면 iOS가 이미 이전 화면을 밀어 보여 준다.
+  // 그 뒤에 카드 접히는 전환을 또 돌리면 통장 화면이 다시 번쩍 나타났다가 접히므로, 이때는 전환 없이 바로 바꾼다.
+  const EDGE = 30;
+  let edgeTouching = false, edgeTouchEnd = 0;
+  window.addEventListener('touchstart', e => {
+    const x = e.touches[0] ? e.touches[0].clientX : EDGE;
+    edgeTouching = x < EDGE || x > window.innerWidth - EDGE;
+  }, { passive: true, capture: true });
+  const endEdgeTouch = () => { if (edgeTouching) edgeTouchEnd = Date.now(); edgeTouching = false; };
+  window.addEventListener('touchend', endEdgeTouch, { passive: true, capture: true });
+  window.addEventListener('touchcancel', endEdgeTouch, { passive: true, capture: true });
+
+  window.addEventListener('popstate', e => {
+    const swiped = e.hasUAVisualTransition || edgeTouching || Date.now() - edgeTouchEnd < 1200;
+    edgeTouchEnd = 0;
+    closeSheets();
+    if (view === 'book') closeBook(swiped);
+  });
 
   // ── 시트 열고 닫기 ───────────────────────────────
   function openSheet(id) {
