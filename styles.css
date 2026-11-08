@@ -64,9 +64,9 @@ h1, h2, p, ol, dl, dd { margin: 0; }
 .icon-btn.on-cover:active { background: rgba(255, 255, 255, 0.16); }
 
 /* ── 첫 화면 ───────────────────────────────────── */
-.home-head { padding: calc(env(safe-area-inset-top) + 14px) 22px 6px 24px; }
-.home-top { display: flex; align-items: center; gap: 8px; min-height: 44px; margin-right: -10px; }
-.today { flex: 1; font-size: 15px; font-weight: 500; color: var(--ink-2); }
+.home-head { padding: calc(env(safe-area-inset-top) + 14px) 18px 6px 22px; }
+.home-top { display: flex; align-items: center; gap: 6px; min-height: 44px; margin-right: -10px; }
+.today { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; font-weight: 500; color: var(--ink-2); }
 /* 새 버전 알림: 어느 화면에서나 위쪽 가운데에 뜬다 */
 .update-chip {
   position: fixed; top: calc(env(safe-area-inset-top) + 10px); left: 50%; z-index: 30;
@@ -76,13 +76,9 @@ h1, h2, p, ol, dl, dd { margin: 0; }
   animation: toast 520ms var(--spring) both;
 }
 .update-chip:disabled { opacity: 0.8; }
-.wordmark { margin-top: 2px; font-size: 46px; font-weight: 820; line-height: 1.05; letter-spacing: -0.05em; }
-.home-sum { margin-top: 10px; min-height: 22px; font-size: 15px; color: var(--ink-2); }
-.home-sum .num { color: var(--ink); font-size: 16px; font-weight: 600; }
-.home-sum .num.plus { color: var(--get); }
-.home-sum .num.minus { color: var(--give); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-.stack { padding: 22px 14px 0; }
+.stack { padding: 14px 14px 0; }
 
 /* 표지 공통: 사람 카드와 통장 머리, 사람 추가 미리보기 */
 .cover {
@@ -151,7 +147,7 @@ h1, h2, p, ol, dl, dd { margin: 0; }
 .add-person .i { width: 20px; height: 20px; }
 .add-person:active { transform: scale(0.96); }
 .empty .add-person { margin: 24px 0 0; background: var(--ink); color: var(--paper); }
-.head-add { display: flex; align-items: center; gap: 4px; height: 36px; padding: 0 14px 0 10px; border-radius: 999px; background: var(--paper-2); color: var(--ink); font-size: 14.5px; font-weight: 650; transition: transform 200ms var(--ease-out); }
+.head-add { flex: none; display: flex; align-items: center; gap: 3px; height: 36px; padding: 0 12px 0 9px; border-radius: 999px; background: var(--paper-2); color: var(--ink); font-size: 14.5px; font-weight: 650; transition: transform 200ms var(--ease-out); }
 .head-add .i { width: 18px; height: 18px; stroke-width: 2.2; }
 .head-add:active { transform: scale(0.95); }
 
@@ -310,6 +306,37 @@ h1, h2, p, ol, dl, dd { margin: 0; }
 }
 .swatch[aria-checked="true"] { box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.16), 0 0 0 3px var(--surface), 0 0 0 5px var(--c); transform: scale(0.9); }
 
+/* ── 더치페이 ─────────────────────────────────── */
+.field-label { margin-top: 10px; font-size: 13px; font-weight: 700; color: var(--ink-2); }
+.field-label small { margin-left: 6px; font-size: 12px; font-weight: 550; color: var(--ink-3); }
+#dutch-people { margin-top: 8px; margin-bottom: 8px; }
+.chip.me::before { background: var(--ink-3); }
+.chip.me[aria-checked="true"] { background: var(--ink); color: var(--paper); }
+.chip.me[aria-checked="true"]::before { background: var(--paper); opacity: 0.6; }
+.dutch-amount { margin: 8px 0 14px; }
+.dutch-amount .amount-input { font-size: 50px; }
+.split { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.split-row { padding: 10px 12px 10px 14px; border-radius: 16px; background: var(--paper); box-shadow: inset 4px 0 0 var(--c); }
+.split-top { display: flex; align-items: center; gap: 8px; min-height: 36px; }
+.split-name { font-size: 16px; font-weight: 680; letter-spacing: -0.02em; }
+.extra-add { height: 30px; padding: 0 10px; border-radius: 999px; background: var(--surface); color: var(--ink-2); font-size: 13px; font-weight: 650; box-shadow: 0 0 0 1px var(--rule); }
+.extra-add:active { transform: scale(0.96); }
+.split-share { margin-left: auto; font-size: 20px; font-weight: 500; white-space: nowrap; }
+.extra { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+.extra-memo, .extra-amt { height: 40px; border-radius: 12px; background: var(--surface); box-shadow: 0 0 0 1px var(--rule); }
+.extra-memo { flex: 1; width: 0; min-width: 0; padding: 0 12px; border: 0; outline: none; font-size: 15px; font-weight: 500; }
+.extra-memo::placeholder, .extra-amt input::placeholder { color: var(--ink-3); font-weight: 450; }
+.extra-amt { flex: none; display: flex; align-items: center; gap: 3px; width: 116px; padding: 0 10px; }
+.extra-amt input { width: 100%; min-width: 0; padding: 0; border: 0; outline: none; background: none; text-align: right; font-size: 17px; }
+.extra-amt span { font-size: 13px; font-weight: 650; color: var(--ink-2); }
+.extra-memo:focus, .extra-amt:focus-within { box-shadow: 0 0 0 1.5px var(--ink-3); }
+.extra-del { flex: none; display: grid; place-items: center; width: 32px; height: 40px; color: var(--ink-3); }
+.extra-del .i { width: 18px; height: 18px; }
+.split-note { margin: 10px 2px 14px; min-height: 20px; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+.split-note.bad { color: var(--give); font-weight: 600; }
+.primary-btn.wide { display: block; width: 100%; margin-top: 16px; background: var(--ink); color: var(--paper); }
+.primary-btn:disabled { opacity: 0.35; }
+
 .prose { margin-top: 6px; font-size: 15px; line-height: 1.65; color: var(--ink-2); }
 .prose b { color: var(--ink); }
 .prose.small { margin-top: 14px; font-size: 13.5px; }
@@ -322,7 +349,7 @@ h1, h2, p, ol, dl, dd { margin: 0; }
 /* ── 알림 ───────────────────────────────────────── */
 .toast {
   position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 104px); z-index: 20;
-  display: flex; align-items: center; gap: 14px; max-width: calc(100% - 32px); padding: 12px 14px 12px 20px;
+  display: flex; align-items: center; gap: 14px; width: max-content; max-width: calc(100% - 32px); padding: 12px 14px 12px 20px;
   border-radius: 999px; background: var(--ink); color: var(--paper); font-size: 15px; font-weight: 600;
   transform: translateX(-50%); box-shadow: 0 16px 32px -14px rgba(0, 0, 0, 0.5);
   animation: toast 460ms var(--spring) both;
