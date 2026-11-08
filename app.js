@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   // 데이터: { v, people: [{id, name, color, createdAt}], entries: [{id, personId, amount, memo, date, createdAt}] }
-  // amount는 받은 돈이 +, 준 돈이 −. 사람별 잔액 = 받은 돈 − 준 돈.
+  // amount는 받을 것이 +, 줄 것이 −. 사람별 잔액 = 받을 것 − 줄 것.
   const KEY = 'ogogam.data.v1';
   const COLORS = [
     ['쪽빛', '#34449a'], ['솔잎', '#2f6450'], ['자두', '#6e3563'], ['단풍', '#a9432f'],
@@ -62,8 +62,8 @@
     }
     return { give, get, bal: get - give, last };
   }
-  const direction = bal => bal > 0 ? '받은 게 더 많아요' : bal < 0 ? '준 게 더 많아요' : '딱 맞아요';
-  // 잔액은 글 대신 색으로: 받은 게 많으면 파랑(+), 준 게 많으면 빨강(−). 흰 캡슐 위에 올려 어느 표지 색에서도 또렷하게.
+  const direction = bal => bal > 0 ? '받을 게 더 많아요' : bal < 0 ? '줄 게 더 많아요' : '딱 맞아요';
+  // 잔액은 글 대신 색으로: 받을 게 많으면 파랑(+), 줄 게 많으면 빨강(−). 흰 캡슐 위에 올려 어느 표지 색에서도 또렷하게.
   const tone = bal => bal > 0 ? 'plus' : bal < 0 ? 'minus' : 'even';
   const sign = bal => bal > 0 ? '+' : bal < 0 ? '−' : '';
   const balPill = bal => h('span', { class: 'bal-pill ' + tone(bal) },
@@ -89,8 +89,8 @@
       h('span', { class: 'card-name' }, p.name),
       h('span', { class: 'card-bal' }, balPill(s.bal)),
       h('span', { class: 'card-foot' },
-        h('span', {}, h('small', {}, '준 돈'), h('span', { class: 'num' }, won(s.give))),
-        h('span', {}, h('small', {}, '받은 돈'), h('span', { class: 'num' }, won(s.get))))
+        h('span', {}, h('small', {}, '줄 것'), h('span', { class: 'num' }, won(s.give))),
+        h('span', {}, h('small', {}, '받을 것'), h('span', { class: 'num' }, won(s.get))))
     )));
     stack.classList.toggle('deal', !!deal && !reduceMotion.matches);
     $('home-empty').hidden = list.length > 0;
@@ -143,7 +143,7 @@
       const give = e.amount < 0;
       items.push(h('li', {}, h('button', {
         class: 'row' + (e.id === opts.arrive ? ' arrive' : ''), type: 'button', style: `--i:${Math.min(i, 16)}`,
-        'aria-label': `${d.getMonth() + 1}월 ${d.getDate()}일 ${e.memo || ''} ${give ? '준 돈' : '받은 돈'} ${won(e.amount)}원`,
+        'aria-label': `${d.getMonth() + 1}월 ${d.getDate()}일 ${e.memo || ''} ${give ? '줄 것' : '받을 것'} ${won(e.amount)}원`,
         onclick: () => openEntry(e)
       },
         h('span', { class: 'r-date' }, h('b', {}, d.getDate()), h('small', {}, (d.getMonth() + 1) + '월')),
@@ -253,7 +253,7 @@
     amountInput.value = d ? fmt.format(Number(d)) : '';
     fitAmount();
   });
-  // 고칠 때는 원래 준 돈인지 받은 돈인지 금액 색과 버튼 테두리로 보여 준다. 새 기록은 중립색.
+  // 고칠 때는 원래 줄 것인지 받을 것인지 금액 색과 버튼 테두리로 보여 준다. 새 기록은 중립색.
   function showKind(k) {
     const f = amountInput.closest('.amount-field');
     f.classList.remove('shake');
@@ -346,7 +346,7 @@
       toast(`${p.name} 통장에 적었어요`);
     }
   });
-  // 키보드의 완료/엔터는 키보드만 내린다(준 돈인지 받은 돈인지는 버튼으로 고른다).
+  // 키보드의 완료/엔터는 키보드만 내린다(줄 것인지 받을 것인지는 버튼으로 고른다).
   for (const input of [amountInput, $('entry-memo')]) input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); input.blur(); } });
 
   $('entry-delete').onclick = () => {
@@ -631,7 +631,7 @@
   };
   $('export-csv').onclick = () => {
     const q = s => '"' + String(s).replace(/"/g, '""') + '"';
-    const rows = [['날짜', '사람', '준 돈', '받은 돈', '메모']];
+    const rows = [['날짜', '사람', '줄 것', '받을 것', '메모']];
     for (const e of [...state.entries].sort(order)) {
       const p = person(e.personId);
       rows.push([e.date, p ? p.name : '', e.amount < 0 ? -e.amount : '', e.amount > 0 ? e.amount : '', e.memo || '']);
