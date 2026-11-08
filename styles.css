@@ -1,0 +1,327 @@
+/* 오고감 — 사람마다 통장 한 권.
+   표지(카드)는 두툼한 가죽 통장처럼: 바느질 선, 눌러 찍은 첫 글자, 아래쪽 두께.
+   글자: 한글은 Pretendard, 금액 숫자는 아이폰의 New York(ui-serif) — 통장에 찍힌 숫자처럼. */
+@font-face {
+  font-family: "Pretendard Variable";
+  font-weight: 45 920; font-style: normal; font-display: swap;
+  src: url("fonts/PretendardVariable.woff2") format("woff2-variations");
+}
+
+:root {
+  color-scheme: light dark;
+  --paper: #eceef2;
+  --paper-2: #e2e5ea;
+  --surface: #fbfbfc;
+  --ink: #1b1c20;
+  --ink-2: #5b5f69;
+  --ink-3: #979ba5;
+  --rule: rgba(27, 28, 32, 0.08);
+  --give: #c8413a;
+  --get: #2463c9;
+  --sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", system-ui, sans-serif;
+  --figure: ui-serif, "New York", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --spring: cubic-bezier(0.34, 1.32, 0.5, 1);
+  --strip: 86px;
+  --card-h: 212px;
+  --c: #34449a;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #131519;
+    --paper-2: #1b1e23;
+    --surface: #1e2127;
+    --ink: #f1f2f4;
+    --ink-2: #a8acb5;
+    --ink-3: #6f747e;
+    --rule: rgba(255, 255, 255, 0.08);
+    --give: #ff7d70;
+    --get: #7aa9ff;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; background: var(--paper); }
+body {
+  margin: 0; min-height: 100dvh;
+  background: var(--paper); color: var(--ink);
+  font: 17px/1.45 var(--sans); letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  word-break: keep-all; overflow-wrap: break-word;
+  -webkit-tap-highlight-color: transparent;
+}
+button, input { font: inherit; color: inherit; letter-spacing: inherit; }
+button { background: none; border: 0; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+h1, h2, p, ol, dl, dd { margin: 0; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2.5px solid var(--get); outline-offset: 2px; }
+.num { font-family: var(--figure); font-variant-numeric: lining-nums tabular-nums; font-feature-settings: "lnum", "tnum"; letter-spacing: -0.01em; }
+.i { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.app { max-width: 560px; margin: 0 auto; padding-bottom: calc(env(safe-area-inset-bottom) + 132px); }
+.icon-btn { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; transition: background-color 160ms; }
+.icon-btn:active { background: var(--rule); }
+.icon-btn.on-cover:active { background: rgba(255, 255, 255, 0.16); }
+
+/* ── 첫 화면 ───────────────────────────────────── */
+.home-head { padding: calc(env(safe-area-inset-top) + 14px) 22px 6px 24px; }
+.home-top { display: flex; align-items: center; gap: 8px; min-height: 44px; margin-right: -10px; }
+.today { flex: 1; font-size: 15px; font-weight: 500; color: var(--ink-2); }
+.update-chip { height: 30px; padding: 0 13px; border-radius: 999px; background: var(--get); color: #fff; font-size: 13px; font-weight: 700; }
+.wordmark { margin-top: 2px; font-size: 46px; font-weight: 820; line-height: 1.05; letter-spacing: -0.05em; }
+.home-sum { margin-top: 10px; min-height: 22px; font-size: 15px; color: var(--ink-2); }
+.home-sum .num { color: var(--ink); font-size: 16px; }
+
+.stack { padding: 22px 14px 0; }
+
+/* 표지 공통: 사람 카드와 통장 머리, 사람 추가 미리보기 */
+.cover {
+  position: relative; isolation: isolate; overflow: hidden; color: #fff;
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgba(255, 255, 255, 0.17), transparent 55%),
+    linear-gradient(162deg, color-mix(in oklab, var(--c) 86%, white) 0%, var(--c) 46%, color-mix(in oklab, var(--c) 78%, black) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 -5px 0 rgba(0, 0, 0, 0.17),
+    0 -12px 26px -16px rgba(0, 0, 0, 0.42);
+}
+/* 바느질 선 */
+.cover::before {
+  content: ""; position: absolute; inset: 8px; z-index: -1; pointer-events: none;
+  border: 1.5px dashed rgba(255, 255, 255, 0.24); border-radius: 19px;
+}
+/* 눌러 찍은 첫 글자 */
+.cover::after {
+  content: attr(data-mono); position: absolute; right: 18px; bottom: -34px; z-index: -1; pointer-events: none;
+  font-size: 168px; font-weight: 860; line-height: 1; letter-spacing: -0.06em;
+  color: rgba(0, 0, 0, 0.11); text-shadow: 0 1.5px 0 rgba(255, 255, 255, 0.13);
+}
+
+.card {
+  display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto 1fr auto;
+  width: 100%; height: var(--card-h); margin-top: calc(var(--strip) - var(--card-h));
+  padding: 20px 22px 22px 24px; border-radius: 26px; text-align: left;
+  transition: transform 260ms var(--ease-out);
+}
+.card:first-child { margin-top: 0; }
+.card:active { transform: translateY(-3px) scale(0.992); }
+.card-name { grid-column: 1; align-self: start; padding-top: 4px; font-size: 19px; font-weight: 680; letter-spacing: -0.025em; }
+.card-bal { grid-column: 2; display: grid; justify-items: end; line-height: 1.1; }
+.card-bal .num { font-size: 27px; font-weight: 500; }
+.card-bal .unit { margin-left: 3px; font-size: 14px; font-weight: 600; opacity: 0.85; }
+.card-dir { margin-top: 4px; font-size: 12.5px; font-weight: 600; opacity: 0.74; }
+.card-foot { grid-column: 1 / -1; grid-row: 3; display: flex; gap: 26px; }
+.card-foot span { display: grid; gap: 1px; }
+.card-foot small { font-size: 12px; font-weight: 600; opacity: 0.7; }
+.card-foot .num { font-size: 17px; }
+
+/* 처음 열 때 한 번: 통장들이 아래에서 차례로 쌓인다 */
+.stack.deal .card { animation: deal 720ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 70ms + 80ms); }
+@keyframes deal { from { opacity: 0; transform: translateY(46px) scale(0.97); } }
+.card.born { animation: born 680ms var(--spring) both; }
+@keyframes born { from { opacity: 0; transform: translateY(-20px) scale(0.94); } }
+
+.empty { padding: 56px 28px 8px; }
+.empty-lead { font-size: 24px; font-weight: 700; line-height: 1.38; letter-spacing: -0.035em; }
+.empty-note { margin-top: 10px; color: var(--ink-2); font-size: 15px; }
+.add-person {
+  display: flex; align-items: center; gap: 6px; height: 48px; padding: 0 20px 0 15px;
+  border-radius: 999px; background: var(--paper-2); color: var(--ink-2); font-size: 15px; font-weight: 650;
+  transition: transform 200ms var(--ease-out);
+}
+.add-person .i { width: 20px; height: 20px; }
+.add-person:active { transform: scale(0.96); }
+.empty .add-person { margin: 24px 0 0; background: var(--ink); color: var(--paper); }
+.head-add { display: flex; align-items: center; gap: 4px; height: 36px; padding: 0 14px 0 10px; border-radius: 999px; background: var(--paper-2); color: var(--ink); font-size: 14.5px; font-weight: 650; transition: transform 200ms var(--ease-out); }
+.head-add .i { width: 18px; height: 18px; stroke-width: 2.2; }
+.head-add:active { transform: scale(0.95); }
+
+/* ── 사람 통장 ─────────────────────────────────── */
+.book-cover {
+  padding: calc(env(safe-area-inset-top) + 6px) 14px 24px; border-radius: 0 0 32px 32px;
+  box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.17), 0 14px 30px -18px rgba(0, 0, 0, 0.45);
+}
+.book-cover::before { inset: auto 8px 8px; top: -20px; border-radius: 0 0 25px 25px; }
+/* 통장 머리에서는 첫 글자를 오른쪽 위로 비켜 찍는다(아래 합계 숫자와 겹치지 않게) */
+.book-cover::after { top: calc(env(safe-area-inset-top) + 18px); bottom: auto; right: -14px; font-size: 200px; color: rgba(0, 0, 0, 0.09); }
+.cover-bar { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; }
+.cover-name { text-align: center; font-size: 17px; font-weight: 680; letter-spacing: -0.02em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cover-balance { margin-top: 30px; text-align: center; line-height: 1; }
+.cover-balance .num { font-size: 62px; font-weight: 400; letter-spacing: -0.025em; }
+.cover-balance .unit { margin-left: 6px; font-size: 22px; font-weight: 560; opacity: 0.85; }
+.cover-dir { margin-top: 12px; text-align: center; font-size: 15px; font-weight: 560; opacity: 0.8; }
+.cover-totals { display: grid; grid-template-columns: 1fr 1fr; margin: 28px 10px 0; }
+.cover-totals div { display: grid; justify-items: center; gap: 2px; }
+.cover-totals div + div { border-left: 1px solid rgba(255, 255, 255, 0.2); }
+.cover-totals dt { font-size: 12.5px; font-weight: 600; opacity: 0.72; }
+.cover-totals dd { font-size: 19px; }
+
+.ledger { list-style: none; padding: 10px 14px 0; }
+.ledger .year { padding: 22px 8px 4px; font-size: 13px; font-weight: 700; color: var(--ink-3); }
+.row {
+  display: grid; grid-template-columns: 46px 1fr auto; grid-template-rows: auto auto; column-gap: 12px; align-items: center;
+  width: 100%; padding: 14px 8px; text-align: left; border-radius: 14px; position: relative;
+  transition: background-color 160ms;
+}
+.row::after { content: ""; position: absolute; left: 66px; right: 8px; bottom: 0; height: 1px; background: var(--rule); }
+.ledger li:last-child .row::after { display: none; }
+.row:active { background: var(--paper-2); }
+.r-date { grid-row: 1 / 3; display: grid; justify-items: center; line-height: 1; }
+.r-date b { font-family: var(--figure); font-variant-numeric: lining-nums tabular-nums; font-size: 23px; font-weight: 500; }
+.r-date small { margin-top: 4px; font-size: 11.5px; font-weight: 600; color: var(--ink-3); }
+.r-memo { grid-row: 1 / 3; min-width: 0; font-size: 16.5px; font-weight: 560; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.r-memo.quiet { color: var(--ink-2); font-weight: 450; }
+.r-amt { font-size: 19px; font-weight: 500; text-align: right; }
+.r-amt.give { color: var(--give); }
+.r-amt.get { color: var(--get); }
+.r-run { margin-top: 2px; font-size: 12px; color: var(--ink-3); text-align: right; }
+.ledger.enter .row { animation: rise 520ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 30ms + 140ms); }
+@keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+.row.arrive { animation: arrive 1400ms var(--ease-out) both; }
+@keyframes arrive {
+  0% { opacity: 0; transform: translateY(-10px); background: color-mix(in oklab, var(--c) 20%, transparent); }
+  25% { opacity: 1; transform: none; }
+  100% { background: transparent; }
+}
+.ledger-empty { padding: 64px 24px; text-align: center; color: var(--ink-2); font-size: 15.5px; line-height: 1.7; }
+
+/* ── + 버튼 ─────────────────────────────────────── */
+.fab {
+  position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 22px); z-index: 5;
+  display: grid; place-items: center; width: 66px; height: 66px; margin-left: -33px; border-radius: 50%;
+  background: var(--ink); color: var(--paper);
+  box-shadow: 0 14px 28px -10px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition: transform 320ms var(--spring), background-color 300ms;
+  view-transition-name: fab;
+}
+.fab .i { width: 30px; height: 30px; stroke-width: 2.4; }
+.fab:active { transform: scale(0.9); }
+[data-view="book"] .fab { background: var(--c); color: #fff; }
+
+/* ── 시트(입력창) ───────────────────────────────── */
+/* 아이폰 키보드에 가리지 않도록 화면 위쪽에서 내려온다 */
+.sheet {
+  position: fixed; inset: calc(env(safe-area-inset-top) + 10px) 0 auto; margin: 0 auto;
+  width: min(100% - 20px, 520px); max-width: none; max-height: calc(100dvh - env(safe-area-inset-top) - 20px);
+  padding: 0; border: 0; border-radius: 28px; overflow: auto; overscroll-behavior: contain;
+  background: var(--surface); color: var(--ink);
+  box-shadow: 0 34px 70px -24px rgba(0, 0, 0, 0.42), 0 0 0 1px var(--rule);
+}
+.sheet[open] { animation: drop 560ms var(--spring) both; }
+.sheet::backdrop { background: rgba(14, 16, 20, 0.34); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.sheet[open]::backdrop { animation: fade 300ms ease both; }
+.sheet.closing { animation: lift 220ms ease-in both; }
+.sheet.closing::backdrop { animation: fade 220ms ease reverse both; }
+@keyframes drop { from { opacity: 0; transform: translateY(-34px) scale(0.96); } }
+@keyframes lift { to { opacity: 0; transform: translateY(-18px) scale(0.98); } }
+@keyframes fade { from { opacity: 0; } }
+.sheet-body { padding: 14px 20px 20px; }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; margin: 0 -10px 4px 0; }
+.sheet-title { font-size: 17px; font-weight: 720; letter-spacing: -0.02em; }
+
+.people-chips { display: flex; gap: 8px; margin: 6px -20px 16px; padding: 2px 20px; overflow-x: auto; scrollbar-width: none; }
+.people-chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex: none; display: flex; align-items: center; gap: 7px; height: 38px; padding: 0 15px 0 12px; border-radius: 999px;
+  background: var(--paper); color: var(--ink-2); font-size: 15px; font-weight: 620;
+  transition: background-color 220ms, color 220ms, transform 260ms var(--spring);
+}
+.chip::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--c); transition: background-color 220ms; }
+.chip[aria-checked="true"] { background: var(--c); color: #fff; }
+.chip[aria-checked="true"]::before { background: rgba(255, 255, 255, 0.75); }
+.chip:active { transform: scale(0.95); }
+
+.kind { position: relative; display: grid; grid-template-columns: 1fr 1fr; height: 54px; padding: 4px; border-radius: 17px; background: var(--paper); }
+.kind-btn { position: relative; z-index: 1; border-radius: 13px; font-size: 16px; font-weight: 650; color: var(--ink-3); transition: color 260ms; }
+.kind-btn[data-kind="give"][aria-checked="true"] { color: var(--give); }
+.kind-btn[data-kind="get"][aria-checked="true"] { color: var(--get); }
+.kind-thumb {
+  position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 13px;
+  background: var(--surface); box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.16), 0 0 0 0.5px var(--rule);
+  transition: transform 480ms var(--spring);
+}
+.kind[data-kind="get"] .kind-thumb { transform: translateX(100%); }
+
+.amount-field { display: flex; align-items: baseline; justify-content: center; margin: 24px 0 18px; color: var(--give); cursor: text; transition: color 260ms; }
+.amount-field.get { color: var(--get); }
+.sign { font-family: var(--figure); font-size: 40px; margin-right: 4px; }
+.amount-input {
+  width: 1.2ch; min-width: 1.2ch; max-width: 78vw; padding: 0; border: 0; outline: none; background: none;
+  color: inherit; font-size: 58px; font-weight: 400; line-height: 1.1; text-align: center; caret-color: currentColor;
+}
+.amount-input::placeholder { color: var(--ink-3); opacity: 0.5; }
+.amount-unit { margin-left: 6px; font-size: 21px; font-weight: 600; color: var(--ink-2); }
+.amount-field.shake { animation: shake 420ms var(--ease-out); }
+@keyframes shake { 20% { transform: translateX(-9px); } 45% { transform: translateX(7px); } 70% { transform: translateX(-4px); } }
+
+.entry-row { display: flex; gap: 8px; }
+.memo-input, .name-input {
+  flex: 1; min-width: 0; height: 50px; padding: 0 15px; border: 0; border-radius: 15px; outline: none;
+  background: var(--paper); font-size: 16.5px; font-weight: 500;
+}
+.memo-input::placeholder, .name-input::placeholder { color: var(--ink-3); font-weight: 450; }
+.memo-input:focus, .name-input:focus { box-shadow: inset 0 0 0 1.5px var(--ink-3); }
+.date-pill {
+  position: relative; flex: none; display: flex; align-items: center; height: 50px; padding: 0 16px;
+  border-radius: 15px; background: var(--paper); font-size: 15px; font-weight: 650; white-space: nowrap;
+}
+.date-pill input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.011; border: 0; -webkit-appearance: none; appearance: none; }
+
+.sheet-actions { display: flex; align-items: center; margin-top: 18px; }
+.primary-btn {
+  margin-left: auto; height: 54px; padding: 0 28px; border-radius: 17px;
+  background: var(--c); color: #fff; font-size: 16.5px; font-weight: 720;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -3px 0 rgba(0, 0, 0, 0.14);
+  transition: transform 240ms var(--spring), background-color 300ms;
+}
+.primary-btn:active { transform: scale(0.96); }
+.text-btn { height: 44px; padding: 0 6px; font-size: 15px; font-weight: 650; }
+.text-btn.danger { color: var(--give); }
+
+.person-preview { display: flex; align-items: flex-start; height: 112px; margin: 6px 0 14px; padding: 20px 22px; border-radius: 22px; font-size: 19px; font-weight: 680; transition: background 300ms; }
+.person-preview::after { font-size: 120px; bottom: -26px; }
+.swatches { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; margin-top: 16px; }
+.swatch {
+  aspect-ratio: 1; border-radius: 50%; background: var(--c);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.16);
+  transition: transform 260ms var(--spring), box-shadow 200ms;
+}
+.swatch[aria-checked="true"] { box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.16), 0 0 0 3px var(--surface), 0 0 0 5px var(--c); transform: scale(0.9); }
+
+.prose { margin-top: 6px; font-size: 15px; line-height: 1.65; color: var(--ink-2); }
+.prose b { color: var(--ink); }
+.prose.small { margin-top: 14px; font-size: 13.5px; }
+.setting-list { display: grid; gap: 8px; margin-top: 16px; }
+.setting { display: grid; gap: 2px; padding: 14px 16px; border-radius: 16px; background: var(--paper); text-align: left; transition: transform 200ms var(--ease-out); }
+.setting:active { transform: scale(0.98); }
+.setting b { font-size: 16px; font-weight: 700; }
+.setting span { font-size: 13.5px; color: var(--ink-2); }
+
+/* ── 알림 ───────────────────────────────────────── */
+.toast {
+  position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 104px); z-index: 20;
+  display: flex; align-items: center; gap: 14px; max-width: calc(100% - 32px); padding: 12px 14px 12px 20px;
+  border-radius: 999px; background: var(--ink); color: var(--paper); font-size: 15px; font-weight: 600;
+  transform: translateX(-50%); box-shadow: 0 16px 32px -14px rgba(0, 0, 0, 0.5);
+  animation: toast 460ms var(--spring) both;
+}
+.toast button { padding: 4px 8px; color: color-mix(in oklab, var(--get) 60%, var(--paper)); font-weight: 750; }
+@keyframes toast { from { opacity: 0; transform: translate(-50%, 18px) scale(0.94); } }
+
+/* ── 화면 전환: 누른 통장이 그대로 커져서 통장 머리가 된다 ── */
+::view-transition-group(cover) { animation-duration: 560ms; animation-timing-function: cubic-bezier(0.2, 0.9, 0.22, 1); }
+::view-transition-old(cover), ::view-transition-new(cover) { animation-duration: 300ms; height: 100%; object-fit: cover; object-position: top; }
+::view-transition-old(root) { animation: 260ms ease both vt-out; }
+::view-transition-new(root) { animation: 420ms 120ms var(--ease-out) both vt-in; }
+::view-transition-group(fab) { animation-duration: 420ms; }
+@keyframes vt-out { to { opacity: 0; transform: scale(0.985); } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(16px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after, ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) {
+    animation-duration: 1ms !important; animation-delay: 0ms !important; transition-duration: 1ms !important;
+  }
+}
+@media (min-width: 600px) {
+  .home-head { padding-top: 40px; }
+}

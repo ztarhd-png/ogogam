@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#eceef2"><meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131519">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="오고감">
+<meta name="description" content="친구와 주고받은 돈을 사람별 통장처럼 적어 두는 장부.">
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icons/icon-180.png"><link rel="icon" href="icons/icon-192.png">
+<link rel="preload" href="fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="styles.css">
+<title>오고감 · 주고받은 돈 장부</title>
+</head>
+<body data-view="home">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="m14.5 5.5-6.5 6.5 6.5 6.5"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="18" cy="12" r="1.4" fill="currentColor"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.2M12 18.3v2.2M3.5 12h2.2M18.3 12h2.2M6 6l1.6 1.6M16.4 16.4 18 18M6 18l1.6-1.6M16.4 7.6 18 6"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/></symbol>
+</svg>
+
+<main class="app">
+  <section id="home" class="view home" aria-labelledby="home-title">
+    <header class="home-head">
+      <div class="home-top">
+        <p id="today" class="today"></p>
+        <button id="update-ready" class="update-chip" type="button" hidden>업데이트</button>
+        <button id="add-person" class="head-add" type="button"><svg class="i"><use href="#i-plus"/></svg>사람 추가</button>
+        <button id="open-settings" class="icon-btn" type="button" aria-label="설정과 백업"><svg class="i"><use href="#i-gear"/></svg></button>
+      </div>
+      <h1 id="home-title" class="wordmark">오고감</h1>
+      <p id="home-sum" class="home-sum"></p>
+    </header>
+    <div id="stack" class="stack"></div>
+    <div id="home-empty" class="empty" hidden>
+      <p class="empty-lead">돈을 주고받는 사람을<br>먼저 한 명 추가하세요.</p>
+      <p class="empty-note">사람마다 통장이 한 권씩 생겨요.</p>
+      <button id="empty-add" class="add-person" type="button"><svg class="i"><use href="#i-plus"/></svg>사람 추가</button>
+    </div>
+  </section>
+
+  <section id="book" class="view book" hidden aria-labelledby="book-name">
+    <header id="book-cover" class="cover book-cover">
+      <div class="cover-bar">
+        <button id="book-back" class="icon-btn on-cover" type="button" aria-label="목록으로"><svg class="i"><use href="#i-back"/></svg></button>
+        <h2 id="book-name" class="cover-name"></h2>
+        <button id="book-more" class="icon-btn on-cover" type="button" aria-label="이름과 색 바꾸기"><svg class="i"><use href="#i-more"/></svg></button>
+      </div>
+      <p class="cover-balance"><span id="book-balance" class="num">0</span><span class="unit">원</span></p>
+      <p id="book-dir" class="cover-dir"></p>
+      <dl class="cover-totals">
+        <div><dt>준 돈</dt><dd id="book-give" class="num">0</dd></div>
+        <div><dt>받은 돈</dt><dd id="book-get" class="num">0</dd></div>
+      </dl>
+    </header>
+    <ol id="ledger" class="ledger" aria-label="주고받은 기록"></ol>
+    <p id="ledger-empty" class="ledger-empty" hidden>아직 기록이 없어요.<br>아래 <b>+</b>를 눌러 첫 기록을 남기세요.</p>
+  </section>
+
+  <button id="fab" class="fab" type="button" aria-label="주고받은 기록 추가"><svg class="i"><use href="#i-plus"/></svg></button>
+</main>
+
+<dialog id="entry-sheet" class="sheet" aria-labelledby="entry-title">
+  <form id="entry-form" method="dialog" class="sheet-body" autocomplete="off">
+    <div class="sheet-head">
+      <h2 id="entry-title" class="sheet-title">새 기록</h2>
+      <button class="icon-btn" type="button" data-close aria-label="닫기"><svg class="i"><use href="#i-close"/></svg></button>
+    </div>
+    <div id="entry-people" class="people-chips" role="radiogroup" aria-label="누구와"></div>
+    <div class="kind" role="radiogroup" aria-label="준 돈인지 받은 돈인지">
+      <button type="button" class="kind-btn" data-kind="give" role="radio">줬어요</button>
+      <button type="button" class="kind-btn" data-kind="get" role="radio">받았어요</button>
+      <span class="kind-thumb" aria-hidden="true"></span>
+    </div>
+    <label class="amount-field">
+      <span class="sign" id="entry-sign" aria-hidden="true">−</span>
+      <input id="entry-amount" class="amount-input num" inputmode="numeric" enterkeyhint="done" placeholder="0" aria-label="금액">
+      <span class="amount-unit">원</span>
+    </label>
+    <div class="entry-row">
+      <input id="entry-memo" class="memo-input" maxlength="60" enterkeyhint="done" placeholder="메모 (예: 점심값)" aria-label="메모">
+      <label class="date-pill"><span id="entry-date-label">오늘</span><input id="entry-date" type="date" aria-label="날짜"></label>
+    </div>
+    <div class="sheet-actions">
+      <button id="entry-delete" class="text-btn danger" type="button" hidden>삭제</button>
+      <button id="entry-save" class="primary-btn" type="submit">기록하기</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="person-sheet" class="sheet" aria-labelledby="person-title">
+  <form id="person-form" method="dialog" class="sheet-body" autocomplete="off">
+    <div class="sheet-head">
+      <h2 id="person-title" class="sheet-title">사람 추가</h2>
+      <button class="icon-btn" type="button" data-close aria-label="닫기"><svg class="i"><use href="#i-close"/></svg></button>
+    </div>
+    <div id="person-preview" class="cover person-preview" aria-hidden="true"><span id="person-preview-name">이름</span></div>
+    <input id="person-name" class="name-input" maxlength="20" enterkeyhint="done" placeholder="이름 (예: 깡모)" aria-label="이름" required>
+    <div id="person-colors" class="swatches" role="radiogroup" aria-label="통장 색"></div>
+    <div class="sheet-actions">
+      <button id="person-delete" class="text-btn danger" type="button" hidden>삭제</button>
+      <button id="person-save" class="primary-btn" type="submit">추가하기</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="settings-sheet" class="sheet" aria-labelledby="settings-title">
+  <div class="sheet-body">
+    <div class="sheet-head">
+      <h2 id="settings-title" class="sheet-title">백업과 설정</h2>
+      <button class="icon-btn" type="button" data-close aria-label="닫기"><svg class="i"><use href="#i-close"/></svg></button>
+    </div>
+    <p class="prose">기록은 <b>이 아이폰의 이 앱 안에만</b> 저장돼요. 다른 기기와 동기화되지 않으니, 가끔 백업 파일을 ‘파일’ 앱에 보관하세요.</p>
+    <div class="setting-list">
+      <button id="backup" class="setting" type="button"><b>백업 파일 저장</b><span>모든 사람과 기록을 파일 하나로</span></button>
+      <button id="restore" class="setting" type="button"><b>백업 파일 불러오기</b><span>지금 기록에 더해요. 같은 기록은 한 번만</span></button>
+      <button id="export-csv" class="setting" type="button"><b>엑셀용 CSV 내보내기</b><span>날짜, 사람, 준 돈, 받은 돈, 메모</span></button>
+    </div>
+    <input id="restore-file" type="file" accept="application/json,.json" hidden>
+    <p class="prose small">홈 화면에 추가한 앱을 지우면 기록도 함께 지워져요. 새 버전이 나오면 첫 화면 위쪽에 <b>업데이트</b> 버튼이 보이고, 누를 때만 바뀌어요.</p>
+    <p id="app-info" class="prose small"></p>
+  </div>
+</dialog>
+
+<div id="toast" class="toast" role="status" hidden><span id="toast-text"></span><button id="toast-action" type="button" hidden></button></div>
+<script src="app.js"></script>
+</body>
+</html>
