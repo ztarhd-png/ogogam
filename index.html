@@ -125,7 +125,11 @@
     </div>
     <p class="field-label">같이 먹은 사람</p>
     <div id="dutch-people" class="people-chips" role="group" aria-label="같이 먹은 사람"></div>
-    <p class="field-label">총액 <small>내가 계산했어요</small></p>
+    <div id="dutch-payer-wrap">
+      <p class="field-label">계산한 사람</p>
+      <div id="dutch-payer" class="people-chips" role="radiogroup" aria-label="계산한 사람"></div>
+    </div>
+    <p class="field-label">총액</p>
     <label class="amount-field dutch-amount">
       <input id="dutch-total" class="amount-input num" inputmode="numeric" enterkeyhint="done" placeholder="0" aria-label="총액">
       <span class="amount-unit">원</span>

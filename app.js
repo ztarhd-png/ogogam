@@ -433,12 +433,12 @@
   };
 
   // ── 더치페이 ─────────────────────────────────────
-  // 내가 총액을 계산했고, 같이 먹은 사람들에게 몫을 나눈다.
-  // 몫 = (총액 − 모두의 '따로 먹은 것') ÷ 인원 + 그 사람의 '따로 먹은 것'.
-  // 친구 몫은 그 친구 통장에 '줬어요'로 적는다(내가 대신 냈으니 받을 돈). 내 몫은 적지 않는다.
-  // 1원 단위로 나누어떨어지지 않는 나머지는 나에게(내가 빠지면 앞사람부터 1원씩).
+  // 같이 먹은 사람들이 총액을 나눈다. 몫 = (총액 − 모두의 '따로 먹은 것') ÷ 인원 + 그 사람의 '따로 먹은 것'.
+  // 1원 단위로 나누어떨어지지 않는 나머지는 계산한 사람이 진다.
+  // 내가 계산했으면: 친구마다 그 몫을 그 친구 통장에 '줬어요'로(받을 돈). 내 몫은 적지 않는다.
+  // 친구가 계산했으면: 내 몫만 그 친구 통장에 '받았어요'로(갚을 돈). 친구끼리 주고받을 돈은 내 장부 밖이라 적지 않는다.
   const ME = '@me';
-  let dutch = null; // { ids: [ME, personId...], extras: { id: [{ memo, amount }] } }
+  let dutch = null; // { ids: [ME, personId...], payer, extras: { id: [{ memo, amount }] } }
   const dutchTotal = $('dutch-total');
   const numOf = v => Number(digits(v || '')) || 0;
   function formatMoneyInput(input) {
@@ -464,10 +464,7 @@
     const base = Math.floor(common / ids.length);
     let rest = common - base * ids.length;
     for (const id of ids) shares.set(id, base + extraOf(id));
-    if (rest) {
-      if (shares.has(ME)) shares.set(ME, shares.get(ME) + rest);
-      else for (const id of ids) { if (!rest) break; shares.set(id, shares.get(id) + 1); rest--; }
-    }
+    if (rest) shares.set(dutch.payer, shares.get(dutch.payer) + rest);
     return { total, extras, common, shares, base, ok: total > 0 };
   }
 
@@ -480,8 +477,19 @@
         const i = dutch.ids.indexOf(id);
         if (i >= 0) dutch.ids.splice(i, 1); else dutch.ids.push(id);
         dutch.ids.sort((a, b) => all.indexOf(a) - all.indexOf(b));
+        if (!dutch.ids.includes(dutch.payer)) dutch.payer = dutch.ids.includes(ME) ? ME : dutch.ids[0];
         renderDutchPeople(); renderDutchSplit(true);
       }
+    }, dutchName(id))));
+    renderDutchPayer();
+  }
+  // 계산한 사람: 같이 먹은 사람 중 한 명
+  function renderDutchPayer() {
+    $('dutch-payer-wrap').hidden = dutch.ids.length < 2;
+    $('dutch-payer').replaceChildren(...dutch.ids.map(id => h('button', {
+      class: 'chip' + (id === ME ? ' me' : ''), type: 'button', role: 'radio', 'data-id': id, style: `--c:${dutchColor(id)}`,
+      'aria-checked': String(id === dutch.payer),
+      onclick: () => { dutch.payer = id; renderDutchPayer(); renderDutchSplit(true); }
     }, dutchName(id))));
   }
 
@@ -508,7 +516,7 @@
         ));
         return h('li', { class: 'split-row', 'data-id': id, style: `--c:${dutchColor(id)}` },
           h('div', { class: 'split-top' },
-            h('span', { class: 'split-name' }, dutchName(id)),
+            h('span', { class: 'split-name' }, dutchName(id), id === dutch.payer && dutch.ids.length > 1 ? h('small', { class: 'paid' }, '계산') : null),
             h('button', {
               class: 'extra-add', type: 'button',
               onclick: () => {
@@ -529,21 +537,33 @@
       const v = r.shares.get(li.dataset.id);
       li.querySelector('.split-share').textContent = r.ok && v != null ? won(v) + '원' : '–';
     }
-    const friends = dutch.ids.filter(id => id !== ME);
-    const owed = friends.reduce((s, id) => s + (r.shares.get(id) || 0), 0);
+    const plan = dutchPlan(r);
     const note = $('dutch-note');
-    note.classList.toggle('bad', r.common < 0);
+    const meOut = !dutch.ids.includes(ME) && dutch.ids.length > 0;
+    note.classList.toggle('bad', r.common < 0 || meOut);
+    const how = `같이 먹은 ${won(r.common)}원을 ${dutch.ids.length}명이 ${won(r.base)}원씩` + (r.extras ? ', 따로 먹은 건 그 사람이' : '');
     if (!dutch.ids.length) note.textContent = '같이 먹은 사람을 골라 주세요.';
+    else if (meOut) note.textContent = '나도 같이 먹어야 내 통장에 적을 게 생겨요.';
     else if (r.common < 0) note.textContent = `따로 먹은 것(${won(r.extras)}원)이 총액보다 많아요.`;
     else if (!r.total) note.textContent = `${dutch.ids.length}명이 나눠요. 총액을 넣으세요.`;
-    else note.textContent = `같이 먹은 ${won(r.common)}원을 ${dutch.ids.length}명이 ${won(r.base)}원씩` + (r.extras ? ', 따로 먹은 건 그 사람이' : '') + (friends.length ? ` · 받을 돈 ${won(owed)}원` : '');
-    $('dutch-save').disabled = !(r.ok && friends.length && owed > 0);
-    $('dutch-save').textContent = friends.length ? `${friends.length}명 통장에 나눠 적기` : '나눠서 적기';
+    else if (dutch.payer === ME) note.textContent = how + (plan.length ? ` · 받을 돈 ${won(plan.reduce((s, x) => s - x.amount, 0))}원` : '');
+    else note.textContent = how + ` · ${dutchName(dutch.payer)}에게 갚을 돈 ${won(r.shares.get(ME) || 0)}원`;
+    $('dutch-save').disabled = !(r.ok && plan.length);
+    $('dutch-save').textContent = dutch.payer === ME
+      ? (plan.length ? `${plan.length}명 통장에 나눠 적기` : '나눠서 적기')
+      : `${dutchName(dutch.payer)} 통장에 내 몫 적기`;
+  }
+  // 실제로 적을 기록: [{ personId, amount }]
+  function dutchPlan(r) {
+    if (!r.ok || !dutch.ids.includes(ME)) return [];
+    if (dutch.payer === ME) return dutch.ids.filter(id => id !== ME && r.shares.get(id) > 0).map(id => ({ personId: id, amount: -r.shares.get(id) }));
+    const mine = r.shares.get(ME) || 0;
+    return mine > 0 ? [{ personId: dutch.payer, amount: mine }] : [];
   }
 
   function openDutch() {
     if (!state.people.length) { openPerson(null); return; }
-    dutch = { ids: [ME], extras: {} };
+    dutch = { ids: [ME], payer: ME, extras: {} };
     dutchTotal.value = ''; fitDutchTotal();
     $('dutch-memo').value = '';
     $('dutch-date').value = today();
@@ -564,22 +584,30 @@
   $('dutch-form').addEventListener('submit', e => {
     e.preventDefault();
     const r = splitDutch();
-    const friends = dutch.ids.filter(id => id !== ME && r.shares.get(id) > 0);
-    if (!r.ok || !friends.length) return;
+    const plan = dutchPlan(r);
+    if (!plan.length) return;
     const title = $('dutch-memo').value.trim() || '더치페이';
     const date = $('dutch-date').value || today();
     const group = uid(), now = new Date().toISOString();
-    const made = friends.map(id => {
+    const extraNote = id => {
       const own = (dutch.extras[id] || []).filter(x => x.amount > 0);
-      const extra = own.length ? ' + ' + own.map(x => x.memo.trim() || '따로').join(', ') : '';
-      return { id: uid(), personId: id, amount: -r.shares.get(id), memo: `${title} · ${dutch.ids.length}명 나눔${extra}`, date, createdAt: now, dutch: group };
-    });
+      return own.length ? ' + ' + own.map(x => x.memo.trim() || '따로').join(', ') : '';
+    };
+    const paidBy = dutch.payer === ME ? '' : ` · ${dutchName(dutch.payer)} 계산`;
+    const made = plan.map(({ personId, amount }) => ({
+      id: uid(), personId, amount,
+      memo: `${title} · ${dutch.ids.length}명 나눔${paidBy}${extraNote(amount < 0 ? personId : ME)}`,
+      date, createdAt: now, dutch: group
+    }));
     state.entries.push(...made);
     save();
     document.activeElement && document.activeElement.blur && document.activeElement.blur();
     closeSheet('dutch-sheet');
     renderHome(false);
-    toast(`${made.length}명에게 ${won(made.reduce((s, x) => s - x.amount, 0))}원 나눠 적었어요`, '되돌리기', () => {
+    const msg = dutch.payer === ME
+      ? `${made.length}명에게 ${won(made.reduce((s, x) => s - x.amount, 0))}원 나눠 적었어요`
+      : `${dutchName(dutch.payer)} 통장에 내 몫 ${won(made[0].amount)}원 적었어요`;
+    toast(msg, '되돌리기', () => {
       state.entries = state.entries.filter(x => x.dutch !== group); save(); refresh();
     });
   });
