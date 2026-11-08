@@ -78,7 +78,7 @@ h1, h2, p, ol, dl, dd { margin: 0; }
 .update-chip:disabled { opacity: 0.8; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-.stack { padding: 14px 14px 0; }
+.stack { position: relative; z-index: 0; isolation: isolate; padding: 14px 14px 0; } /* 카드들의 z-index가 + 버튼 위로 올라오지 않게 */
 
 /* 표지 공통: 사람 카드와 통장 머리, 사람 추가 미리보기 */
 .cover {
@@ -309,11 +309,12 @@ h1, h2, p, ol, dl, dd { margin: 0; }
 /* ── 더치페이 ─────────────────────────────────── */
 .field-label { margin-top: 10px; font-size: 13px; font-weight: 700; color: var(--ink-2); }
 .field-label small { margin-left: 6px; font-size: 12px; font-weight: 550; color: var(--ink-3); }
-/* 더치페이의 사람 칸은 옆으로 넘기지 않고 줄바꿈해 모두 보인다(5줄을 넘으면 그 안에서만 세로로 넘김) */
-#dutch-people, #dutch-payer {
+/* 사람 칸은 옆으로 넘기지 않고 줄바꿈해 모두 보인다(5줄을 넘으면 그 안에서만 세로로 넘김) */
+#entry-people, #dutch-people, #dutch-payer {
   flex-wrap: wrap; margin: 8px 0; padding: 2px 0; overflow-x: visible;
   max-height: calc(38px * 5 + 8px * 4 + 4px); overflow-y: auto;
 }
+#entry-people { margin: 6px 0 4px; }
 .split-name .paid { margin-left: 6px; padding: 2px 7px; border-radius: 999px; background: var(--c); color: #fff; font-size: 11.5px; font-weight: 700; vertical-align: 2px; }
 [data-id="@me"] .paid { background: var(--ink); color: var(--paper); }
 .chip.me::before { background: var(--ink-3); }
