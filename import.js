@@ -2,11 +2,11 @@
   'use strict';
   // 태그가계부(MoneyBook) 'CSV 내보내기' 파일 읽기.
   // 가계부마다 한 묶음이고 빈 줄로 나뉜다:
-  //   깡모,,
+  //   민수,,
   //   id,date,tag,price
-  //   1,26 6월 2023,"#송츄","-115,000"
+  //   1,03 5월 2024,"#점심","-12,000"
   //   ...
-  //   total,,,"122,320"
+  //   total,,,"38,000"
   // price는 받은 돈(수입)이 +, 준 돈(지출)이 −. 오고감과 같은 방향이다.
 
   function splitCsvLine(line) {
@@ -75,7 +75,7 @@
     }
     for (const b of books) {
       b.sum = Math.round(b.sum * 100) / 100;
-      // 원래 앱은 total을 부호 없이 적는다(준 게 더 많아도 26,150).
+      // 원래 앱은 total을 부호 없이 적는다(준 게 더 많아도 12,000처럼).
       if (b.total !== null && Math.abs(b.total) !== Math.abs(b.sum)) problems.push(`${b.name}: 원래 앱 합계 ${b.total}, 읽은 합계 ${b.sum}`);
     }
     return { books, problems };
